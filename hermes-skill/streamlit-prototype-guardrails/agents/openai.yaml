@@ -1,0 +1,4 @@
+interface:
+  display_name: "삼우 Streamlit 프로토타입 규칙"
+  short_description: "Streamlit 프로토타입을 정식 서비스 전환 가능하게 유지합니다"
+  default_prompt: "삼우 Streamlit 프로토타입 규칙에 따라 기능을 구현하고 검증해 주세요."
