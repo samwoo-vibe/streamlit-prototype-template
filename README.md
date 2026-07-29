@@ -9,9 +9,22 @@ AI 코딩 에이전트는 작업을 시작하기 전에 반드시 [`AGENTS.md`](
 
 ## 직원 PC 준비
 
-직접 설치할 프로그램은 `uv` 하나입니다. Python 3.13과 모든 Python 패키지는
+직접 설치할 프로그램은 Git과 uv 두 개입니다. Python 3.13과 모든 Python 패키지는
 uv가 프로젝트별로 자동 준비합니다. Node.js, Docker, WSL, FastAPI,
 PostgreSQL은 설치하지 않습니다.
+
+## BMAD 필수 사용
+
+이 템플릿에는 Hermes용 공식 BMAD Method 파일이 미리 설치되어 있습니다.
+직원이 Node.js나 `npx`로 BMAD를 설치할 필요는 없습니다.
+
+바이브코딩을 시작하면 Hermes가 BMAD로 요구사항과 기획 산출물을 먼저 정리합니다.
+필수 BMAD 단계가 완료되기 전에는 코드를 구현하지 않습니다. 세부 절차는
+[`AGENTS.md`](AGENTS.md)를 따릅니다.
+
+- `_bmad/`: BMAD Core와 BMM 워크플로 및 설정
+- `.agents/skills/`: Hermes가 사용하는 BMAD 스킬
+- `_bmad-output/`: 기획·구현 산출물
 
 ## 실행
 
@@ -44,4 +57,4 @@ uv run pytest
 - `src/samwoo_prototype/repositories/`: 데이터 조회·저장
 - `src/samwoo_prototype/models.py`: SQLAlchemy 테이블 모델
 - `tests/`: 화면과 분리된 업무 로직 테스트
-
+- `_bmad/`, `.agents/skills/`: 미리 설치된 BMAD Method

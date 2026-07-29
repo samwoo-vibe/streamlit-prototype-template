@@ -27,6 +27,7 @@ testpaths = ["tests"]
 [tool.ruff]
 target-version = "py313"
 line-length = 100
+extend-exclude = [".agents", "_bmad"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/samwoo_prototype"]

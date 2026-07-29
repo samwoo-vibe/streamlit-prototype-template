@@ -6,4 +6,5 @@ __pycache__/
 .env
 data/*.db
 data/*.db-*
-
+_bmad/config.user.toml
+_bmad/custom/*.user.toml

@@ -1,0 +1,7 @@
+[core]
+user_name = "사용자"
+communication_language = "Korean"
+document_output_language = "Korean"
+
+[modules.bmm]
+user_skill_level = "beginner"
