@@ -35,6 +35,7 @@ Windows에서 `start.cmd`를 더블클릭합니다. 최초 실행은 Python과 �
 
 ```powershell
 uv sync
+uv run alembic upgrade head
 uv run streamlit run app.py
 ```
 
@@ -43,6 +44,21 @@ uv run streamlit run app.py
 ```powershell
 uv run pytest
 ```
+
+직원 PC에서는 PostgreSQL이나 Docker를 설치하지 않습니다. 로컬 실행은 기본값인
+SQLite를 사용하고, `main` 브랜치 배포 시 Coolify가 앱 전용 PostgreSQL과
+`DATABASE_URL`을 자동으로 준비합니다. 컨테이너는 시작 전에 Alembic migration을
+적용한 다음 Streamlit을 실행합니다.
+
+## 자동 배포
+
+`samwoo-vibe` 조직에서 이 템플릿으로 저장소를 만든 후 `main` 브랜치에 push하면
+Coolify 개발 환경에 자동으로 등록·배포됩니다. 이후 `main` push도 자동 재배포됩니다.
+
+- 공개 서비스: `streamlit:8501`
+- 헬스체크: `/_stcore/health`
+- 운영 DB: 중앙 PostgreSQL의 앱 전용 database와 role
+- 로컬 SQLite 데이터: 배포하지 않음
 
 ## 저장 데이터
 

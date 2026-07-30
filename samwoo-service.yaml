@@ -1,0 +1,10 @@
+version: 1
+deploy_branch: main
+compose_file: compose.yaml
+public_service: streamlit
+public_port: 8501
+healthcheck: /_stcore/health
+database:
+  engine: postgresql
+  required: true
+  migrations: alembic

@@ -18,6 +18,12 @@ if errorlevel 1 (
   exit /b 1
 )
 
+uv run alembic upgrade head
+if errorlevel 1 (
+  echo [오류] 로컬 데이터베이스 준비에 실패했습니다.
+  pause
+  exit /b 1
+)
+
 uv run streamlit run app.py
 if errorlevel 1 pause
-

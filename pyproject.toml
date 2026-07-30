@@ -4,8 +4,10 @@ version = "0.1.0"
 description = "Samwoo citizen-development Streamlit prototype"
 requires-python = ">=3.13,<3.14"
 dependencies = [
+    "alembic>=1.16,<2",
     "pydantic>=2.11,<3",
     "pydantic-settings>=2.10,<3",
+    "psycopg[binary]>=3.2,<4",
     "sqlalchemy>=2.0,<3",
     "streamlit>=1.46,<2",
 ]

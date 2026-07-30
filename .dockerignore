@@ -1,0 +1,11 @@
+.git
+.venv
+__pycache__
+*.py[cod]
+.pytest_cache
+.ruff_cache
+.env
+data
+_bmad
+_bmad-output
+.agents
