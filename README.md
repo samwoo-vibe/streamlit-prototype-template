@@ -59,6 +59,7 @@ Coolify 개발 환경에 자동으로 등록·배포됩니다. 이후 `main` pus
 - 헬스체크: `/_stcore/health`
 - 운영 DB: 중앙 PostgreSQL의 앱 전용 database와 role
 - 로컬 SQLite 데이터: 배포하지 않음
+- 외부 접근: Coolify에서 회사 공용 HTTP Basic Auth를 먼저 적용
 
 ## 저장 데이터
 
