@@ -49,6 +49,19 @@ uv run pytest
 개발 데이터는 `data/prototype.db`에 저장됩니다. 이 파일은 Git에 올라가지
 않습니다. 중요한 업무 데이터나 개인정보를 프로토타입에 입력하지 마세요.
 
+## 소스코드 인수인계
+
+Nextcloud 또는 별도 Git 저장소로 개발 결과를 넘길 때는 프로젝트 폴더 전체가 아니라
+다음 명령으로 만든 인수인계본을 사용합니다.
+
+```powershell
+uv run python scripts/export_handoff.py
+```
+
+`_handoff/`에 앱 실행과 향후 React + FastAPI 마이그레이션에 필요한 소스만 담긴
+폴더와 ZIP이 생성됩니다. BMAD 파일, 테스트, 개발 DB, 실제 데이터, 캐시와 Git 이력은
+포함되지 않습니다.
+
 ## 폴더 역할
 
 - `app.py`, `pages/`: Streamlit 화면만 작성

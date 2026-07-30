@@ -84,6 +84,29 @@ BMAD는 템플릿에 미리 설치되어 있다. 사용자 PC에서 Node.js, npm
 7. BMAD 산출물과 구현 결과를 대조한다.
 8. `uv run pytest`를 실행하고 전체 통과를 확인한다.
 
+## 소스코드 인수인계
+
+사용자가 Nextcloud 또는 Git 저장소에 결과물을 올려 달라고 하면 현재 작업 폴더 전체를
+업로드하지 않는다. 먼저 다음 명령으로 인수인계 전용 산출물을 만든다.
+
+```bash
+uv run python scripts/export_handoff.py
+```
+
+`_handoff/<프로젝트명>-source/`와 같은 이름의 ZIP만 인수인계 대상으로 사용한다.
+
+- Nextcloud에는 ZIP 파일만 올린다.
+- Git에는 `_handoff/<프로젝트명>-source/`의 내용만 새 저장소에 커밋한다. 현재
+  작업 저장소의 Git 이력이나 remote를 재사용하지 않는다.
+- 업로드 전에 생성된 `SOURCE-HANDOFF.md`와 파일 목록을 확인한다.
+- `.env`, 비밀번호, 토큰, 실제 회사 데이터, 개인정보가 없는지 다시 검사한다.
+- `_bmad`, `.agents`, `_bmad-output`, `tests`, `data`, DB 파일, 캐시, 가상환경,
+  로그, 임시 파일, 로컬 업로드 파일 및 기존 `.git`은 절대 포함하지 않는다.
+- 사용자가 데이터나 BMAD 문서까지 명시적으로 요청해도 소스코드와 같은 묶음에 넣지
+  않는다. 필요성과 민감정보를 확인한 뒤 별도 파일로 분리한다.
+- 인수인계 산출물은 React + FastAPI 마이그레이션을 위한 소스 전달본이지 Streamlit
+  운영 배포본이 아니다.
+
 ## 완료 조건
 
 - `uv sync` 성공
