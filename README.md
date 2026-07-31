@@ -5,26 +5,14 @@
 React + FastAPI + PostgreSQL 서비스로 전환합니다.
 
 AI 코딩 에이전트는 작업을 시작하기 전에 반드시 [`AGENTS.md`](AGENTS.md)를
-읽고 모든 규칙을 따라야 합니다.
+먼저 읽고 모든 규칙을 따라야 합니다. 에이전트용 개발·아키텍처·BMAD·보안·검증
+규칙은 README가 아니라 `AGENTS.md`를 기준으로 합니다.
 
 ## 직원 PC 준비
 
 직접 설치할 프로그램은 Git과 uv 두 개입니다. Python 3.13과 모든 Python 패키지는
 uv가 프로젝트별로 자동 준비합니다. Node.js, Docker, WSL, FastAPI,
 PostgreSQL은 설치하지 않습니다.
-
-## BMAD 필수 사용
-
-이 템플릿에는 Hermes용 공식 BMAD Method 파일이 미리 설치되어 있습니다.
-직원이 Node.js나 `npx`로 BMAD를 설치할 필요는 없습니다.
-
-바이브코딩을 시작하면 Hermes가 BMAD로 요구사항과 기획 산출물을 먼저 정리합니다.
-필수 BMAD 단계가 완료되기 전에는 코드를 구현하지 않습니다. 세부 절차는
-[`AGENTS.md`](AGENTS.md)를 따릅니다.
-
-- `_bmad/`: BMAD Core와 BMM 워크플로 및 설정
-- `.agents/skills/`: Hermes가 사용하는 BMAD 스킬
-- `_bmad-output/`: 기획·구현 산출물
 
 ## 실행
 
@@ -78,13 +66,3 @@ uv run python scripts/export_handoff.py
 `_handoff/`에 앱 실행과 향후 React + FastAPI 마이그레이션에 필요한 소스만 담긴
 폴더와 ZIP이 생성됩니다. BMAD 파일, 테스트, 개발 DB, 실제 데이터, 캐시와 Git 이력은
 포함되지 않습니다.
-
-## 폴더 역할
-
-- `app.py`, `pages/`: Streamlit 화면만 작성
-- `src/samwoo_prototype/services/`: 계산과 업무 규칙
-- `src/samwoo_prototype/schemas/`: 입력·출력 데이터 구조
-- `src/samwoo_prototype/repositories/`: 데이터 조회·저장
-- `src/samwoo_prototype/models.py`: SQLAlchemy 테이블 모델
-- `tests/`: 화면과 분리된 업무 로직 테스트
-- `_bmad/`, `.agents/skills/`: 미리 설치된 BMAD Method

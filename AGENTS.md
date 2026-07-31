@@ -1,6 +1,19 @@
 # 삼우 Streamlit 프로토타입 개발 규칙
 
 이 저장소를 수정하는 모든 AI 에이전트와 사람은 아래 규칙을 따라야 한다.
+README는 사람을 위한 프로젝트 소개와 실행 안내다. 작업 규칙은 이 문서를 단일
+기준으로 삼으며, 작업을 시작할 때 이 문서를 끝까지 먼저 읽는다.
+
+## 개발 환경
+
+- 직원 PC에는 Git과 uv만 요구한다.
+- Python과 패키지는 uv로 준비한다.
+- 직원 PC에 Node.js, npm, npx, Docker, WSL, FastAPI 서버 또는 PostgreSQL 서버를
+  설치하도록 안내하지 않는다.
+- 로컬 데이터베이스는 SQLite `data/prototype.db`, Coolify 배포 데이터베이스는
+  자동 생성된 앱 전용 PostgreSQL이다.
+- 로컬 SQLite 데이터는 배포하거나 운영 PostgreSQL로 이전하지 않는다.
+- `psycopg[binary]` 의존성은 PostgreSQL 서버 설치를 의미하지 않는다.
 
 ## BMAD 필수 게이트
 
@@ -83,6 +96,17 @@ Basic Auth를 먼저 거친다. 공용 자격증명을 코드, 문서, `.env` �
 8. `.env`, DB 파일, 개인정보, 실제 회사 데이터를 Git에 커밋하지 않는다.
 9. 스키마를 변경하면 모델과 관련 테스트를 함께 수정한다.
 10. 새 업무 로직에는 최소 한 개 이상의 pytest 테스트를 작성한다.
+
+### 폴더 역할
+
+- `app.py`, `pages/`: Streamlit 화면
+- `src/samwoo_prototype/services/`: 계산과 업무 규칙
+- `src/samwoo_prototype/schemas/`: 입력·출력 데이터 구조
+- `src/samwoo_prototype/repositories/`: 데이터 조회·저장
+- `src/samwoo_prototype/models.py`: SQLAlchemy 테이블 모델
+- `tests/`: 화면과 분리된 업무 로직 테스트
+- `_bmad/`, `.agents/skills/`: 템플릿에 포함된 BMAD Method
+- `_bmad-output/`: 기획·구현 산출물
 
 ## 금지 사항
 
