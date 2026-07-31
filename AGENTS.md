@@ -141,6 +141,24 @@ Basic Auth를 먼저 거친다. 공용 자격증명을 코드, 문서, `.env` �
 - 개인정보나 중요한 운영 데이터를 입력하지 말라는 사용자 주의사항처럼 실제
   프로젝트에도 적용되는 안전 안내는 유지한다.
 
+## Git 및 자동 배포
+
+- 원본 템플릿 저장소 `samwoo-vibe/streamlit-prototype-template`에는 commit하거나
+  push하지 않는다.
+- 배포 대상 remote는 `samwoo-vibe` 조직에 만든 별도 앱 저장소여야 한다.
+- 테스트 결과와 변경사항을 사용자에게 보여주고 명시적 승인을 받은 뒤에만 앱
+  저장소의 `main` 브랜치에 commit·push한다.
+- push 전에 `Dockerfile`, `compose.yaml`, `samwoo-service.yaml`, `alembic.ini`,
+  `migrations/`, `uv.lock`이 유지되는지 확인한다.
+- 앱 저장소의 첫 `main` push는 Coolify 개발 환경을 자동 생성·배포하고 이후
+  `main` push는 같은 앱을 자동 재배포한다.
+- 자동 프로비저너가 앱 전용 PostgreSQL database·role, `DATABASE_URL`,
+  `APP_ENV=dev`, HTTPS 도메인과 회사 공용 HTTP Basic Auth를 준비한다.
+- `_handoff/` 산출물은 검토·전환용이며 Coolify 배포에 사용하지 않는다.
+- 에이전트는 운영 PostgreSQL, Coolify API, 서버 설정을 직접 조작하거나 자동 배포를
+  우회하지 않는다. 실패 시 로그와 manifest를 진단하고 파괴적 조치는 관리자 승인
+  없이 수행하지 않는다.
+
 ## 소스코드 인수인계
 
 사용자가 Nextcloud 또는 Git 저장소에 결과물을 올려 달라고 하면 현재 작업 폴더 전체를
@@ -174,3 +192,5 @@ uv run python scripts/export_handoff.py
 - 해당 작업의 BMAD 산출물이 `_bmad-output/`에 존재
 - BMAD 인수 조건과 테스트 결과가 서로 대응
 - `README.md`가 템플릿 설명이 아니라 현재 프로젝트를 설명함
+- Git remote가 원본 템플릿이 아닌 별도 앱 저장소를 가리킴
+- 배포 작업이면 사용자 승인 후 `main` push 성공을 확인함
