@@ -1,6 +1,19 @@
 # 삼우 Streamlit 프로토타입 개발 규칙
 
 이 저장소를 수정하는 모든 AI 에이전트와 사람은 아래 규칙을 따라야 한다.
+README는 사람을 위한 프로젝트 소개와 실행 안내다. 작업 규칙은 이 문서를 단일
+기준으로 삼으며, 작업을 시작할 때 이 문서를 끝까지 먼저 읽는다.
+
+## 개발 환경
+
+- 직원 PC에는 Git과 uv만 요구한다.
+- Python과 패키지는 uv로 준비한다.
+- 직원 PC에 Node.js, npm, npx, Docker, WSL, FastAPI 서버 또는 PostgreSQL 서버를
+  설치하도록 안내하지 않는다.
+- 로컬 데이터베이스는 SQLite `data/prototype.db`, Coolify 배포 데이터베이스는
+  자동 생성된 앱 전용 PostgreSQL이다.
+- 로컬 SQLite 데이터는 배포하거나 운영 PostgreSQL로 이전하지 않는다.
+- `psycopg[binary]` 의존성은 PostgreSQL 서버 설치를 의미하지 않는다.
 
 ## BMAD 필수 게이트
 
@@ -84,6 +97,17 @@ Basic Auth를 먼저 거친다. 공용 자격증명을 코드, 문서, `.env` �
 9. 스키마를 변경하면 모델과 관련 테스트를 함께 수정한다.
 10. 새 업무 로직에는 최소 한 개 이상의 pytest 테스트를 작성한다.
 
+### 폴더 역할
+
+- `app.py`, `pages/`: Streamlit 화면
+- `src/samwoo_prototype/services/`: 계산과 업무 규칙
+- `src/samwoo_prototype/schemas/`: 입력·출력 데이터 구조
+- `src/samwoo_prototype/repositories/`: 데이터 조회·저장
+- `src/samwoo_prototype/models.py`: SQLAlchemy 테이블 모델
+- `tests/`: 화면과 분리된 업무 로직 테스트
+- `_bmad/`, `.agents/skills/`: 템플릿에 포함된 BMAD Method
+- `_bmad-output/`: 기획·구현 산출물
+
 ## 금지 사항
 
 - Streamlit 버튼 처리문 안에 SQL, 긴 계산식, 파일 변환 로직 작성
@@ -104,6 +128,36 @@ Basic Auth를 먼저 거친다. 공용 자격증명을 코드, 문서, `.env` �
 6. 마지막에 Streamlit 화면을 연결한다.
 7. BMAD 산출물과 구현 결과를 대조한다.
 8. `uv run pytest`를 실행하고 전체 통과를 확인한다.
+
+## 프로젝트 README
+
+- Product Brief에서 프로젝트 이름과 목적이 확정되면 템플릿 `README.md`를 실제
+  프로젝트 README로 교체한다.
+- 최종 README는 현재 프로젝트의 이름, 목적, 주요 기능과 사용자 실행 방법을
+  설명해야 한다.
+- 템플릿 자체를 소개하는 문구와 현재 프로젝트에 불필요한 범용 배포·인수인계 설명을
+  그대로 남기지 않는다.
+- AI 코딩 에이전트가 작업 전에 `AGENTS.md`를 반드시 읽어야 한다는 안내는 유지한다.
+- 개인정보나 중요한 운영 데이터를 입력하지 말라는 사용자 주의사항처럼 실제
+  프로젝트에도 적용되는 안전 안내는 유지한다.
+
+## Git 및 자동 배포
+
+- 원본 템플릿 저장소 `samwoo-vibe/streamlit-prototype-template`에는 commit하거나
+  push하지 않는다.
+- 배포 대상 remote는 `samwoo-vibe` 조직에 만든 별도 앱 저장소여야 한다.
+- 테스트 결과와 변경사항을 사용자에게 보여주고 명시적 승인을 받은 뒤에만 앱
+  저장소의 `main` 브랜치에 commit·push한다.
+- push 전에 `Dockerfile`, `compose.yaml`, `samwoo-service.yaml`, `alembic.ini`,
+  `migrations/`, `uv.lock`이 유지되는지 확인한다.
+- 앱 저장소의 첫 `main` push는 Coolify 개발 환경을 자동 생성·배포하고 이후
+  `main` push는 같은 앱을 자동 재배포한다.
+- 자동 프로비저너가 앱 전용 PostgreSQL database·role, `DATABASE_URL`,
+  `APP_ENV=dev`, HTTPS 도메인과 회사 공용 HTTP Basic Auth를 준비한다.
+- `_handoff/` 산출물은 검토·전환용이며 Coolify 배포에 사용하지 않는다.
+- 에이전트는 운영 PostgreSQL, Coolify API, 서버 설정을 직접 조작하거나 자동 배포를
+  우회하지 않는다. 실패 시 로그와 manifest를 진단하고 파괴적 조치는 관리자 승인
+  없이 수행하지 않는다.
 
 ## 소스코드 인수인계
 
@@ -152,6 +206,9 @@ uv run python scripts/export_handoff.py --project-name 프로젝트명
 - `.env`와 `data/*.db`가 Git 추적 대상이 아님
 - 해당 작업의 BMAD 산출물이 `_bmad-output/`에 존재
 - BMAD 인수 조건과 테스트 결과가 서로 대응
+- `README.md`가 템플릿 설명이 아니라 현재 프로젝트를 설명함
+- Git remote가 원본 템플릿이 아닌 별도 앱 저장소를 가리킴
+- 배포 작업이면 사용자 승인 후 `main` push 성공을 확인함
 - `uv run python scripts/export_handoff.py --project-name 프로젝트명` 성공
 - 인계 ZIP을 새 저장소 루트에 풀었을 때 `compose.yaml`과
   `samwoo-service.yaml`이 최상위에 존재함
