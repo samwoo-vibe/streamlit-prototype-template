@@ -128,6 +128,16 @@ uv run python scripts/export_handoff.py
 - 인수인계 산출물은 React + FastAPI 마이그레이션을 위한 소스 전달본이지 Streamlit
   운영 배포본이 아니다.
 
+## Git 및 공개 템플릿 규칙
+
+- 이 공개 템플릿은 읽기·복제용으로만 사용한다. 원본 템플릿이나 사용자의 GitHub
+  저장소에 바이브코딩 에이전트가 직접 push하지 않는다.
+- 신규 앱 GitHub 저장소 URL은 작업 시작 조건이 아니다.
+- 사용자가 `_handoff/`의 ZIP을 확인한 뒤 Nextcloud의
+  `공유 자료/VibeCoding/<프로젝트명>/`에 자기 계정으로 직접 업로드한다.
+- 관리자가 검토 후 별도 private 저장소를 만들고 승인된 소스만 push하면 기존
+  GitHub → Provisioner → Coolify 자동 배포가 시작된다.
+
 ## 완료 조건
 
 - `uv sync` 성공
