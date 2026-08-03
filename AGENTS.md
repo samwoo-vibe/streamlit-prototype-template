@@ -111,22 +111,27 @@ Basic Auth를 먼저 거친다. 공용 자격증명을 코드, 문서, `.env` �
 업로드하지 않는다. 먼저 다음 명령으로 인수인계 전용 산출물을 만든다.
 
 ```bash
-uv run python scripts/export_handoff.py
+uv run python scripts/export_handoff.py --project-name 프로젝트명
 ```
 
-`_handoff/<프로젝트명>-source/`와 같은 이름의 ZIP만 인수인계 대상으로 사용한다.
+`_handoff/<프로젝트명>-source.zip`만 인수인계 대상으로 사용한다. ZIP 내부에는
+프로젝트 파일이 최상위에 바로 들어가며 `<프로젝트명>-source/` 래퍼 폴더는 만들지
+않는다. 관리자는 ZIP을 새 private GitHub 저장소의 루트에 압축 해제한 뒤 파일을
+이동하거나 추가하지 않고 `main`에 최초 Push할 수 있어야 한다.
 
 - Nextcloud에는 ZIP 파일만 올린다.
-- Git에는 `_handoff/<프로젝트명>-source/`의 내용만 새 저장소에 커밋한다. 현재
-  작업 저장소의 Git 이력이나 remote를 재사용하지 않는다.
+- Git에는 ZIP을 새 저장소 루트에 푼 내용만 커밋한다. 현재 작업 저장소의 Git
+  이력이나 remote를 재사용하지 않는다.
 - 업로드 전에 생성된 `SOURCE-HANDOFF.md`와 파일 목록을 확인한다.
 - `.env`, 비밀번호, 토큰, 실제 회사 데이터, 개인정보가 없는지 다시 검사한다.
 - `_bmad`, `.agents`, `_bmad-output`, `tests`, `data`, DB 파일, 캐시, 가상환경,
   로그, 임시 파일, 로컬 업로드 파일 및 기존 `.git`은 절대 포함하지 않는다.
 - 사용자가 데이터나 BMAD 문서까지 명시적으로 요청해도 소스코드와 같은 묶음에 넣지
   않는다. 필요성과 민감정보를 확인한 뒤 별도 파일로 분리한다.
-- 인수인계 산출물은 React + FastAPI 마이그레이션을 위한 소스 전달본이지 Streamlit
-  운영 배포본이 아니다.
+- ZIP에는 Streamlit 실행에 필요한 `Dockerfile`, `compose.yaml`,
+  `samwoo-service.yaml`, `alembic.ini`, `migrations/`, `uv.lock`도 포함되어야 한다.
+  따라서 관리자 검토 후 새 private 저장소의 `main`에 최초 Push하면 기존
+  GitHub → Provisioner → Coolify 자동 배포 흐름을 시작할 수 있다.
 
 ## Git 및 공개 템플릿 규칙
 
@@ -147,3 +152,6 @@ uv run python scripts/export_handoff.py
 - `.env`와 `data/*.db`가 Git 추적 대상이 아님
 - 해당 작업의 BMAD 산출물이 `_bmad-output/`에 존재
 - BMAD 인수 조건과 테스트 결과가 서로 대응
+- `uv run python scripts/export_handoff.py --project-name 프로젝트명` 성공
+- 인계 ZIP을 새 저장소 루트에 풀었을 때 `compose.yaml`과
+  `samwoo-service.yaml`이 최상위에 존재함

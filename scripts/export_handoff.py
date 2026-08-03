@@ -1,4 +1,4 @@
-"""Create a source-only handoff package for Nextcloud or a new Git repository."""
+"""Create a deployment-ready handoff package for Nextcloud and a new Git repository."""
 
 from __future__ import annotations
 
@@ -9,7 +9,21 @@ import sys
 import zipfile
 from pathlib import Path
 
-INCLUDED_FILES = ("app.py", ".env.example", ".python-version", "start.cmd")
+INCLUDED_FILES = (
+    "README.md",
+    "AGENTS.md",
+    ".dockerignore",
+    ".env.example",
+    ".gitignore",
+    ".python-version",
+    "Dockerfile",
+    "compose.yaml",
+    "samwoo-service.yaml",
+    "alembic.ini",
+    "app.py",
+    "start.cmd",
+    "uv.lock",
+)
 INCLUDED_DIRECTORIES = (
     "src",
     "pages",
@@ -19,6 +33,15 @@ INCLUDED_DIRECTORIES = (
     "templates",
     "locales",
     ".streamlit",
+    "migrations",
+)
+REQUIRED_FILES = (
+    "Dockerfile",
+    "compose.yaml",
+    "samwoo-service.yaml",
+    "alembic.ini",
+    "migrations/env.py",
+    "uv.lock",
 )
 EXCLUDED_NAMES = {
     ".git",
@@ -124,33 +147,40 @@ def write_handoff_files(project_root: Path, export_root: Path, project_name: str
     (export_root / "SOURCE-HANDOFF.md").write_text(
         f"""# {project_name} 소스코드 인수인계
 
-이 폴더는 Streamlit 프로토타입을 검토하고 React + FastAPI 서비스로 전환하기 위한
-소스코드 전달본입니다. 운영 배포본이 아닙니다.
+이 폴더는 Streamlit Template 기반 앱의 검토·배포를 위한 소스코드 전달본입니다.
+압축을 새 private GitHub 저장소의 루트에 풀면 별도 파일 이동 없이 바로 커밋할 수
+있습니다.
 
 ## 포함 범위
 
 - Streamlit 화면: `app.py`, `pages/`
 - 재사용 대상 업무 코드: `src/`
 - 화면 자산과 Streamlit 설정
-- 런타임 의존성: `pyproject.toml`
+- 런타임 의존성: `pyproject.toml`, `uv.lock`
+- Coolify 배포 파일: `Dockerfile`, `compose.yaml`, `samwoo-service.yaml`
+- PostgreSQL migration: `alembic.ini`, `migrations/`
 - 비밀값이 없는 환경변수 예시: `.env.example`
 
 ## 의도적으로 제외한 항목
 
-- BMAD 및 에이전트 파일
-- 테스트·린트 전용 파일과 개발 의존성
+- BMAD 산출물과 테스트·린트 전용 파일
 - SQLite DB, 사용자 입력 데이터와 로컬 업로드 파일
 - `.env`, 토큰, 비밀번호, 개인정보
 - 캐시, 가상환경, 로그, 임시 파일
 - 원본 Git 이력과 remote
 
-원본 프로토타입의 테스트 및 기획 자료가 필요하면 소스와 분리해 별도로 요청하세요.
+관리자는 이 ZIP을 새 private GitHub 저장소의 루트에 압축 해제한 뒤, 파일을
+추가하거나 이동하지 않고 `main`에 최초 Push할 수 있습니다. 이후 기존
+GitHub → Provisioner → Coolify 자동 배포가 이어집니다.
 """,
         encoding="utf-8",
     )
 
 
 def validate_export(export_root: Path) -> list[Path]:
+    for relative_name in REQUIRED_FILES:
+        if not (export_root / relative_name).is_file():
+            raise ValueError(f"배포 필수 파일이 없습니다: {relative_name}")
     files = sorted(path for path in export_root.rglob("*") if path.is_file())
     if not (export_root / "app.py").is_file():
         raise ValueError("내보내기 결과에 app.py가 없습니다.")
@@ -164,10 +194,12 @@ def validate_export(export_root: Path) -> list[Path]:
 
 
 def create_zip(export_root: Path, archive: Path) -> None:
+    # The archive is extracted directly into the new repository root. Do not
+    # add the local ``<project>-source`` directory as a wrapper folder.
     with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED) as bundle:
         for path in sorted(export_root.rglob("*")):
             if path.is_file():
-                bundle.write(path, Path(export_root.name) / path.relative_to(export_root))
+                bundle.write(path, path.relative_to(export_root))
 
 
 def parse_args() -> argparse.Namespace:
@@ -210,7 +242,7 @@ def main() -> int:
         raise
 
     print(f"폴더: {export_root}")
-    print(f"Nextcloud ZIP: {archive}")
+    print(f"Nextcloud ZIP (저장소 루트 직결): {archive}")
     print(f"포함 파일: {len(files)}개")
     return 0
 
