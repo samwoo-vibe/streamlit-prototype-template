@@ -7,12 +7,19 @@
 
 - `bmad-help`: 현재 상태를 확인하고 다음 작업을 안내합니다.
 - `bmad-product-brief`: 신규 프로토타입의 목적과 범위를 정리합니다.
-- `bmad-quick-dev`: 기능 추가, 수정, 리팩터링과 버그 해결을 구현합니다.
-- `bmad-code-review`: 구현 결과를 별도 컨텍스트에서 검토합니다.
+- `bmad-build`: 경량 변경의 명세·인수 조건·구현·검토를 plan-code-review 경로로
+  진행합니다.
+- 전체 BMAD 경로: `bmad-prd`, `bmad-ux`(해당 시), `bmad-architecture`,
+  `bmad-create-epics-and-stories`, `bmad-check-implementation-readiness`를 순서대로
+  진행합니다.
 
 작업 규칙과 사용자 승인 지점은 저장소 루트의 [`AGENTS.md`](../AGENTS.md)를
 기준으로 합니다. 이 문서는 템플릿의 공통 안내이며, 실제 프로젝트의 Product
 Brief와 확정된 요구사항이 생기면 프로젝트에 맞는 문서로 보완합니다.
+
+경량/승격 선택 기준, 산출물, 상태 게이트는
+[`BMAD-WORKFLOW.md`](BMAD-WORKFLOW.md)를 참고합니다. 작업 시작 전에는 반드시
+[`../_bmad-output/workflow-status.md`](../_bmad-output/workflow-status.md)를 읽습니다.
 
 ## 공통 기술 기준
 

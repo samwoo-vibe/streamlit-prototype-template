@@ -11,10 +11,14 @@ AI 코딩 에이전트는 작업을 시작하기 전에 반드시 [`AGENTS.md`](
 ## BMAD 작업 흐름
 
 BMAD 파일은 템플릿에 미리 포함되어 있습니다. `bmad-help`로 현재 상태와 다음
-단계를 확인하고, 신규 프로토타입은 `bmad-product-brief`로 요구사항을 정리한 뒤
-구현 단계에서는 `bmad-quick-dev`를 사용합니다. 구현 결과는 필요할 때
-`bmad-code-review`로 별도 검토합니다. 각 워크플로의 질문과 승인 지점에서는
-사용자 응답을 기다립니다.
+단계를 확인합니다. 신규 프로토타입은 승인된 `bmad-product-brief` 뒤에
+`bmad-build`의 plan-code-review 경로로 구현합니다. 기존의 제한된 변경도 구현 전에
+`bmad-build` 명세·인수 조건·테스트를 갖춥니다. 개인정보·권한·외부 연동·지속 데이터
+모델·다수 화면 또는 역할·정식 서비스 전환·큰 의존성이 핵심인 작업은 PRD부터
+Readiness까지의 전체 BMAD 경로를 사용합니다. 시작 전
+[`_bmad-output/workflow-status.md`](_bmad-output/workflow-status.md)에서 경로와
+구현 허용 상태를 확인하며, 상세 기준은 [`docs/BMAD-WORKFLOW.md`](docs/BMAD-WORKFLOW.md)에
+있습니다. 각 워크플로의 질문과 승인 지점에서는 사용자 응답을 기다립니다.
 
 ## 직원 PC 준비
 

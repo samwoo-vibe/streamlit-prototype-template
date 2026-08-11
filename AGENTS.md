@@ -18,19 +18,32 @@ README는 사람을 위한 프로젝트 소개와 실행 안내다. 작업 규�
 ## BMAD 필수 게이트
 
 모든 신규 기능, 수정, 리팩터링, 버그 해결은 코드 작성 전에 BMAD Method를 사용한다.
-요청이 작아 보여도 BMAD 단계를 생략하지 않는다.
+요청이 작아 보여도 이 게이트를 생략하지 않는다. 작업 시작 시 먼저
+[`_bmad-output/workflow-status.md`](_bmad-output/workflow-status.md)를 읽고
+`bmad-help`로 현재 상태에 맞는 경로를 확인한다. 새 작업은 이전 작업의 승인이나
+`implementation: allowed`를 재사용하지 않고 상태 파일을 다시 초기화한다.
 
-1. 작업 시작 시 `.agents/skills/bmad-help/SKILL.md`를 읽고 현재 상태에 맞는
-   BMAD 워크플로를 결정한다.
-2. 신규 프로토타입은 최소한 `bmad-product-brief`를 완료한다. 아이디어가 모호하면
-   먼저 `bmad-brainstorming`을 수행한다.
-3. 기존 기능의 추가·수정·버그 해결은 최소한 `bmad-quick-dev`를 수행해 구현 가능한
-   명세와 인수 조건을 만든다.
+1. 작업 범위가 단일 화면 또는 업무 규칙의 제한된 변경이면 **경량 경로**를 사용한다.
+   신규 프로토타입은 승인된 `bmad-product-brief` 뒤에, 기존 변경은 구현 전에
+   `bmad-build`로 명세와 인수 조건을 만든다. `bmad-build`의 plan-code-review 경로와
+   사용자 승인 지점을 순서대로 따른 뒤 명세·인수 조건·테스트가 갖춰진 경우에만 구현한다.
+2. 개인정보·권한·외부 API·지속 데이터 모델·다수 역할/화면·정식 서비스 전환·큰 기능
+   의존성 중 하나가 작업의 핵심이면 **전체 BMAD 경로**로 승격한다. `bmad-prd` →
+   `bmad-ux`(해당 시) → `bmad-architecture` → `bmad-create-epics-and-stories` →
+   `bmad-check-implementation-readiness` 순서로 필요한 산출물을 완료한 뒤,
+   `bmad-build`로 구현·검토·사용자 승인 흐름을 진행한다. 신규 프로토타입은 이 순서 전에
+   승인된 Product Brief를 갖춰야 한다.
+3. 영향 범위가 경량과 승격 사이에서 불명확하면 상태 파일에 `blocked`를 기록하고
+   사용자에게 경량 또는 승격 경로를 확인한다. 추정으로 경량 경로를 선택하지 않는다.
 4. 선택한 BMAD 스킬의 `SKILL.md`를 완전히 읽고 단계와 사용자 확인 지점을
-   순서대로 따른다.
-5. BMAD 산출물을 `_bmad-output/`에 저장하고 필수 기획 산출물이 완료된 후에만
-   애플리케이션 코드를 작성한다.
-6. 구현 후 BMAD 산출물의 요구사항과 인수 조건을 기준으로 결과를 검증한다.
+   순서대로 따른다. 전체 경로는 Readiness가 완료되고 상태 파일이 `implementation:
+   allowed`가 되기 전에는 코드를 작성하지 않는다.
+5. BMAD 산출물은 `_bmad-output/`에 저장하되, 공개 템플릿에는 빈 초기 상태만
+   추적한다. 실제 프로젝트의 상세 기획 산출물이나 민감정보를 이 템플릿에 기록하지 않는다.
+6. 구현 후 선택한 경로의 명세·인수 조건과 테스트를 기준으로 결과를 검증한다.
+
+경로 선택, 산출물 위치 및 상태 형식은 [`docs/BMAD-WORKFLOW.md`](docs/BMAD-WORKFLOW.md)를
+기준으로 한다. 상태 파일은 CI 차단기가 아니라 에이전트의 작업 게이트다.
 
 BMAD는 템플릿에 미리 설치되어 있다. 사용자 PC에서 Node.js, npm, npx 또는 BMAD
 설치기를 실행하지 않는다. `_bmad/`와 `.agents/skills/`의 공식 BMAD 파일을 임의로
@@ -65,7 +78,7 @@ headless, one-shot 경로를 사용하지 않는다. 사용자가 한 번에 상
 1. 제품 목적·대상 사용자·현재 문제를 확인하고 사용자 답변을 기다린다.
 2. 핵심 업무 흐름·입력·출력·예외 상황을 확인하고 사용자 답변을 기다린다.
 3. 범위·우선순위·성공 기준을 확인하고 Product Brief 승인을 기다린다.
-4. 구현 가능한 명세와 인수 조건을 제시하고 승인을 기다린다.
+4. `bmad-build`의 구현 가능한 명세와 인수 조건을 제시하고 승인을 기다린다.
 5. 주요 화면과 핵심 업무 흐름의 동작 가능한 초안을 보여주고 피드백을 기다린다.
 6. 테스트 결과와 변경사항을 제시하고 commit·push·배포 승인을 기다린다.
 
@@ -204,7 +217,7 @@ uv run python scripts/export_handoff.py --project-name 프로젝트명
 - `uv run streamlit run app.py` 실행 성공
 - `src/` 내부에 `import streamlit`이 없음
 - `.env`와 `data/*.db`가 Git 추적 대상이 아님
-- 해당 작업의 BMAD 산출물이 `_bmad-output/`에 존재
+- 해당 작업의 BMAD 산출물과 `_bmad-output/workflow-status.md`의 경로·승인 상태가 일치
 - BMAD 인수 조건과 테스트 결과가 서로 대응
 - `README.md`가 템플릿 설명이 아니라 현재 프로젝트를 설명함
 - Git remote가 원본 템플릿이 아닌 별도 앱 저장소를 가리킴
