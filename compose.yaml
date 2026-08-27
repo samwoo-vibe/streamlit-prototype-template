@@ -4,7 +4,6 @@ services:
     restart: unless-stopped
     labels:
       traefik.docker.network: ${COOLIFY_RESOURCE_UUID}
-      coolify.traefik.middlewares: ax-planning-auth@file
     environment:
       DATABASE_URL: ${DATABASE_URL:?DATABASE_URL must be configured in Coolify}
       APP_ENV: ${APP_ENV:-dev}
