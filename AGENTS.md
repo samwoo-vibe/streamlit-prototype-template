@@ -121,6 +121,28 @@ Basic Auth를 먼저 거친다. 공용 자격증명을 코드, 문서, `.env` �
 - `_bmad/`, `.agents/skills/`: 템플릿에 포함된 BMAD Method
 - `_bmad-output/`: 기획·구현 산출물
 
+## 사내 배포 규약
+
+배포 규약 전문은 사내 문서 **`마이그레이션 규칙.md`** 에 있다(관리자 보관). 이 템플릿은
+그 규약을 이미 만족한 상태로 배포된다. 아래는 **깨뜨리면 배포가 실패하거나 조용히
+잘못 동작하는 항목**이므로 임의로 바꾸지 않는다.
+
+- `samwoo-service.yaml`의 `public_service: streamlit` / `public_port: 8501` 조합은
+  프로비저너 허용 목록에 등록된 값이다. 바꾸면 배포가 거부된다. 매니페스트가 잘못되면
+  GitHub에는 성공으로 보이고 배포만 조용히 안 되므로, push 후 도메인을 눈으로 확인한다.
+- 컨테이너가 노출하는 포트는 정확히 하나여야 한다(`EXPOSE 8501`). 관리·메트릭 포트를
+  추가로 열면 Traefik이 대상 포트를 정하지 못해 라우팅이 통째로 실패한다.
+- `compose.yaml`에 `ports:`를 쓰지 않는다(`expose:`만). 자체 `db:` 서비스를 추가하지
+  않는다 - DB는 프로비저너가 중앙 PostgreSQL에 만들어 주고 `DATABASE_URL`로 주입한다.
+- `container_name`을 지정하지 않는다. 무중단 교체 배포가 깨진다.
+- `traefik.docker.network` 라벨과 그 주석을 지우지 않는다(R3-3).
+- 설정이 없을 때 조용히 다른 저장소로 넘어가는 코드를 만들지 않는다(R4-4).
+  `DATABASE_URL`은 값이 없으면 즉시 실패해야 한다.
+- 시간은 시간대 인식 타입으로 저장하고 표시할 때만 변환한다(R9-1).
+- 브라우저에 노출될 값이 아니면 `NEXT_PUBLIC_`/`VITE_` 같은 공개 접두어를 붙이지 않는다.
+- 앱 볼륨은 자동 백업 대상이 아니다. 소실되면 안 되는 파일은 관리자에게 백업 등록을
+  신청한다.
+
 ## 금지 사항
 
 - Streamlit 버튼 처리문 안에 SQL, 긴 계산식, 파일 변환 로직 작성
@@ -165,8 +187,12 @@ Basic Auth를 먼저 거친다. 공용 자격증명을 코드, 문서, `.env` �
   `migrations/`, `uv.lock`이 유지되는지 확인한다.
 - 앱 저장소의 첫 `main` push는 Coolify 개발 환경을 자동 생성·배포하고 이후
   `main` push는 같은 앱을 자동 재배포한다.
-- 자동 프로비저너가 앱 전용 PostgreSQL database·role, `DATABASE_URL`,
-  `APP_ENV=dev`, HTTPS 도메인과 회사 공용 HTTP Basic Auth를 준비한다.
+- 자동 프로비저너가 앱 전용 PostgreSQL database·role, `DATABASE_URL`, `APP_ENV=dev`,
+  HTTPS 도메인을 준비한다. 공용 HTTP Basic Auth는 2026-08-27에 제거됐다 - 접근 제어가
+  필요하면 앱 안에서 구현한다.
+- `APP_ENV`는 운영에서도 항상 `dev`다. 이 값으로 환경을 분기하지 않는다(배포 규약 R5-1).
+- 그 외 시크릿(서명 키, 외부 API 키)은 사람이 Coolify 화면에 넣어야 하므로 첫 배포가
+  한 번 실패하는 것이 정상이다(배포 규약 R5-6).
 - `_handoff/` 산출물은 검토·전환용이며 Coolify 배포에 사용하지 않는다.
 - 에이전트는 운영 PostgreSQL, Coolify API, 서버 설정을 직접 조작하거나 자동 배포를
   우회하지 않는다. 실패 시 로그와 manifest를 진단하고 파괴적 조치는 관리자 승인

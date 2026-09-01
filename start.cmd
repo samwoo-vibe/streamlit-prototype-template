@@ -11,6 +11,10 @@ if errorlevel 1 (
 )
 
 if not exist data mkdir data
+if not exist .env (
+  echo [안내] .env가 없어 .env.example에서 만듭니다. 로컬은 SQLite를 사용합니다.
+  copy /y .env.example .env >nul
+)
 uv sync
 if errorlevel 1 (
   echo [오류] 개발 환경 준비에 실패했습니다.

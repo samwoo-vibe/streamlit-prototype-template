@@ -29,11 +29,13 @@ PostgreSQL은 설치하지 않습니다.
 ## 실행
 
 Windows에서 `start.cmd`를 더블클릭합니다. 최초 실행은 Python과 패키지를
-다운로드하므로 시간이 조금 걸릴 수 있습니다.
+다운로드하므로 시간이 조금 걸릴 수 있습니다. `.env`가 없으면 `start.cmd`가
+`.env.example`을 복사해 만들어 주며, 로컬에서는 SQLite를 사용합니다.
 
 명령줄에서는 다음과 같이 실행할 수 있습니다.
 
 ```powershell
+copy .env.example .env
 uv sync
 uv run alembic upgrade head
 uv run streamlit run app.py

@@ -3,6 +3,12 @@ services:
     build: .
     restart: unless-stopped
     labels:
+      # 이 서비스는 default와 database 두 네트워크에 붙는 공개 서비스다. 라벨이 비면
+      # Traefik이 둘 중 하나를 임의로 골라 외부 접속이 간헐적으로 끊긴다
+      # (컨테이너는 healthy인데 밖에서만 안 되는 증상 - 사내 배포 규약 R3-3).
+      # 값은 보통 Coolify가 채워 준다. 첫 배포 후 반드시 확인하고, 비어 있으면
+      # :-기본값 자리에 앱 네트워크 이름(= coolify-proxy와 공유하는 네트워크)을 적는다.
+      #   docker inspect <컨테이너> --format '{{index .Config.Labels "traefik.docker.network"}}'
       traefik.docker.network: ${COOLIFY_RESOURCE_UUID}
     environment:
       DATABASE_URL: ${DATABASE_URL:?DATABASE_URL must be configured in Coolify}
@@ -19,6 +25,8 @@ services:
       timeout: 3s
       retries: 5
       start_period: 20s
+    # 실측 후 조정한다(사내 배포 규약 R3-6, 13장). 메모리는 처리 복잡도가 아니라
+    # 한 번에 받는 데이터 크기에 비례한다 - 파일 업로드를 붙였다면 반드시 다시 잰다.
     mem_limit: 512m
     networks:
       - default
