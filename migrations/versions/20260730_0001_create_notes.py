@@ -24,8 +24,8 @@ def upgrade() -> None:
         sa.Column("content", sa.Text(), nullable=False),
         sa.Column(
             "created_at",
-            sa.DateTime(),
-            server_default=sa.text("CURRENT_TIMESTAMP"),
+            sa.DateTime(timezone=True),
+            server_default=sa.func.now(),
             nullable=False,
         ),
         sa.PrimaryKeyConstraint("id"),
