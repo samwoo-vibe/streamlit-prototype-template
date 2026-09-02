@@ -1,17 +1,26 @@
 services:
   streamlit:
     build: .
+    user: "10001:10001"
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
     restart: unless-stopped
     labels:
       # 이 서비스는 default와 database 두 네트워크에 붙는 공개 서비스다. 라벨이 비면
       # Traefik이 둘 중 하나를 임의로 골라 외부 접속이 간헐적으로 끊긴다
       # (컨테이너는 healthy인데 밖에서만 안 되는 증상 - 사내 배포 규약 R3-3).
-      # 값은 보통 Coolify가 채워 준다. 첫 배포 후 반드시 확인하고, 비어 있으면
-      # :-기본값 자리에 앱 네트워크 이름(= coolify-proxy와 공유하는 네트워크)을 적는다.
+      # 프로비저너는 custom start command를 제거해 Coolify native Compose 경로를
+      # 보장하고, 그 경로가 애플리케이션 UUID를 제공한다. 공통 fallback 네트워크는
+      # 없으므로 값이 없으면 잘못 라우팅하지 말고 즉시 실패한다.
+      # 자동 gate가 증명하는 범위는 이 source 보간 계약까지다. Coolify가 만든 실제
+      # 컨테이너의 effective label은 첫 배포 rollout에서 운영자가 별도로 spot-check한다.
       #   docker inspect <컨테이너> --format '{{index .Config.Labels "traefik.docker.network"}}'
-      traefik.docker.network: ${COOLIFY_RESOURCE_UUID}
+      traefik.docker.network: ${COOLIFY_RESOURCE_UUID:?COOLIFY_RESOURCE_UUID must be provided by Coolify}
     environment:
       DATABASE_URL: ${DATABASE_URL:?DATABASE_URL must be configured in Coolify}
+      APP_BASE_URL: ${APP_BASE_URL:?APP_BASE_URL must be configured in Coolify}
       APP_ENV: ${APP_ENV:-dev}
     expose:
       - "8501"
@@ -28,6 +37,8 @@ services:
     # 실측 후 조정한다(사내 배포 규약 R3-6, 13장). 메모리는 처리 복잡도가 아니라
     # 한 번에 받는 데이터 크기에 비례한다 - 파일 업로드를 붙였다면 반드시 다시 잰다.
     mem_limit: 512m
+    cpus: "1.0"
+    pids_limit: 256
     networks:
       - default
       - database

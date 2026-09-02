@@ -2,6 +2,7 @@ from functools import lru_cache
 
 from pydantic import ValidationError
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from sqlalchemy.engine import make_url
 
 
 class Settings(BaseSettings):
@@ -12,6 +13,11 @@ class Settings(BaseSettings):
     database_url: str
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+
+def allows_local_demo_data(database_url: str) -> bool:
+    """Allow unauthenticated sample data only in the local SQLite prototype."""
+    return make_url(database_url).get_backend_name() == "sqlite"
 
 
 @lru_cache

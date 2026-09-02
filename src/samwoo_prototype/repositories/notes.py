@@ -18,5 +18,5 @@ class NoteRepository:
 
     def list_all(self) -> Sequence[Note]:
         with SessionLocal() as session:
-            return session.scalars(select(Note).order_by(Note.id.desc())).all()
-
+            statement = select(Note).order_by(Note.id.desc()).limit(100)
+            return session.scalars(statement).all()

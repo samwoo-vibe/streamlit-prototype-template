@@ -11,7 +11,9 @@ class NoteStore(Protocol):
 
 
 def create_note(repository: NoteStore, data: NoteCreate) -> NoteRead:
-    normalized = data.model_copy(update={"title": data.title.strip(), "content": data.content.strip()})
+    normalized = data.model_copy(
+        update={"title": data.title.strip(), "content": data.content.strip()}
+    )
     if not normalized.title:
         raise ValueError("제목을 입력하세요.")
     return NoteRead.model_validate(repository.add(normalized))
@@ -19,4 +21,3 @@ def create_note(repository: NoteStore, data: NoteCreate) -> NoteRead:
 
 def list_notes(repository: NoteStore) -> list[NoteRead]:
     return [NoteRead.model_validate(note) for note in repository.list_all()]
-

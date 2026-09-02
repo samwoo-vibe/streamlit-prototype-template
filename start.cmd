@@ -29,5 +29,7 @@ if errorlevel 1 (
   exit /b 1
 )
 
-uv run streamlit run app.py
+rem Local development may show tracebacks; the deployed container keeps the
+rem secure config.toml default and does not pass this override.
+uv run streamlit run app.py --client.showErrorDetails=full
 if errorlevel 1 pause

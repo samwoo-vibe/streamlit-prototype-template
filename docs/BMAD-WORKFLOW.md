@@ -1,6 +1,10 @@
 # 경량 BMAD 작업 게이트
 
-모든 코드 변경은 시작 전에 `_bmad-output/workflow-status.md`를 읽고 `bmad-help`로
+이 게이트는 이 템플릿에서 파생된 개별 앱을 **원래 바이브코딩 작업공간에서 개발할
+때만** 적용한다. 회사 Coolify·프로비저너 운영, 원본 템플릿 자체의 유지보수, BMAD
+도구와 산출물이 제외된 검토·배포용 인계 저장소에는 적용하지 않는다.
+
+그 범위에 속하는 모든 코드 변경은 시작 전에 `_bmad-output/workflow-status.md`를 읽고 `bmad-help`로
 경로를 확인한 뒤 상태를 기록한다. 이 상태 파일은 CI 차단기가 아니라 에이전트 작업
 게이트다. 경로가 선택되지 않았거나 `implementation`이 `blocked`이면 코드를 작성하지
 않는다. 새 작업은 이전 작업의 승인이나 `implementation: allowed`를 재사용하지 않는다.

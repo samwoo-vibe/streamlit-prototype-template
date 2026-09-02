@@ -17,6 +17,12 @@ README는 사람을 위한 프로젝트 소개와 실행 안내다. 작업 규�
 
 ## BMAD 필수 게이트
 
+이 게이트의 범위는 이 템플릿에서 파생된 개별 앱의 바이브코딩 작업뿐이다. 회사
+Coolify·프로비저너 운영 또는 원본 템플릿 자체의 유지보수 절차에는 적용하지 않는다.
+검토·배포용 인계 ZIP에는 BMAD 도구·산출물이 의도적으로 제외되므로, ZIP을 푼 private
+배포 저장소의 운영 유지보수에도 적용하지 않는다. BMAD 없는 인계 저장소에서 이 절을
+이유로 도구 설치를 요구하거나 작업을 중단하지 않는다.
+
 모든 신규 기능, 수정, 리팩터링, 버그 해결은 코드 작성 전에 BMAD Method를 사용한다.
 요청이 작아 보여도 이 게이트를 생략하지 않는다. 작업 시작 시 먼저
 [`_bmad-output/workflow-status.md`](_bmad-output/workflow-status.md)를 읽고
@@ -86,9 +92,12 @@ headless, one-shot 경로를 사용하지 않는다. 사용자가 한 번에 상
 부분을 추론으로 채우지 않는다. 사용자가 “알아서 해”, “묻지 말고 진행”처럼 해당 작업의
 자율 진행을 명시적으로 요청한 범위에서만 체크포인트를 줄일 수 있다.
 
-자동 배포된 앱은 애플리케이션 자체 인증 유무와 관계없이 Coolify의 회사 공용 HTTP
-Basic Auth를 먼저 거친다. 공용 자격증명을 코드, 문서, `.env` 또는 Git에 기록하지
-않으며 프로비저너가 서버의 root 전용 secret에서 주입한다.
+자동 배포된 신규 앱은 기본 공개이며 Coolify의 회사 공용 HTTP Basic Auth를 거치지 않는다.
+개인정보나 업무상 민감정보가 필요하면 앱 안에 자체 인증·인가를 구현하고 서버 또는 API에서
+권한을 검사한다. 인증 구현 전에는 실제 민감 데이터를 수집하거나 입력하지 않는다. 기본
+메모 저장 예제처럼 인증 없는 DB 쓰기·조회는 로컬 SQLite 프로토타입에서만 허용한다.
+공개 배포에서 조회나 쓰기를 활성화하려면 서버 측 권한 검사를 먼저 구현하고, 쓰기에는
+요청 빈도·용량 제한, 중복 요청 방지, 보존·정리 정책도 함께 구현한다.
 
 ## 목적
 
@@ -135,13 +144,33 @@ Basic Auth를 먼저 거친다. 공용 자격증명을 코드, 문서, `.env` �
 - `compose.yaml`에 `ports:`를 쓰지 않는다(`expose:`만). 자체 `db:` 서비스를 추가하지
   않는다 - DB는 프로비저너가 중앙 PostgreSQL에 만들어 주고 `DATABASE_URL`로 주입한다.
 - `container_name`을 지정하지 않는다. 무중단 교체 배포가 깨진다.
-- `traefik.docker.network` 라벨과 그 주석을 지우지 않는다(R3-3).
+- 명시적 비특권 `user`, `cap_drop: [ALL]`, `no-new-privileges`와 서비스별
+  메모리·CPU·PID 제한을 유지한다. 삭제하면 자동 배포 gate에서 거부된다.
+- Dockerfile의 공식 base image와 외부 `COPY --from` 이미지는 태그와 OCI digest를 함께
+  고정한다. digest를 지우거나 임의 이미지로 바꾸면 동일 커밋 재빌드가 달라질 수 있고
+  자동 배포 gate에서 거부된다.
+- `traefik.docker.network` 라벨과 required UUID 식을 지우거나 fallback으로 바꾸지
+  않는다(R3-3). 프로비저너는 Coolify native Compose 시작 경로를 보장하고 그 경로가
+  `COOLIFY_RESOURCE_UUID`를 제공한다. 값이 없으면 잘못된 네트워크로 배포하지 않고
+  Compose 해석 단계에서 실패해야 한다.
 - 설정이 없을 때 조용히 다른 저장소로 넘어가는 코드를 만들지 않는다(R4-4).
   `DATABASE_URL`은 값이 없으면 즉시 실패해야 한다.
 - 시간은 시간대 인식 타입으로 저장하고 표시할 때만 변환한다(R9-1).
+- 앱의 기준 URL은 프로비저너가 모든 서비스에 주입하는 `APP_BASE_URL`을 사용한다.
+  공개 서비스에만 생길 수 있는 `COOLIFY_URL`이나 하드코딩한 도메인에 의존하지 않는다.
+- 스키마 변경은 Alembic revision으로만 수행한다. 앱 시작 코드에서 `create_all()`로
+  migration 이력을 우회하지 않는다.
+- `.streamlit/config.toml`의 50MB upload/WebSocket 한도를 유지한다. 더 큰 파일이 필요하면
+  실제 동시 작업 memory peak를 측정하고 `mem_limit`과 함께 조정한다.
+- 공개 배포에서는 `.streamlit/config.toml`의 `client.showErrorDetails = "none"`을 유지해
+  예외 메시지·traceback을 브라우저에 노출하지 않는다. 로컬 `start.cmd`만 이를 개발용으로
+  덮어쓴다.
 - 브라우저에 노출될 값이 아니면 `NEXT_PUBLIC_`/`VITE_` 같은 공개 접두어를 붙이지 않는다.
 - 앱 볼륨은 자동 백업 대상이 아니다. 소실되면 안 되는 파일은 관리자에게 백업 등록을
   신청한다.
+- PostgreSQL role의 20 connection 제한과 rolling 배포 여유를 위해 DB pool의
+  `pool_size=5`, `max_overflow=3`, `pool_timeout=5`를 유지한다. replica나 worker 수를
+  늘릴 때는 전체 동시 연결 수를 먼저 계산한다.
 
 ## 금지 사항
 
@@ -188,8 +217,8 @@ Basic Auth를 먼저 거친다. 공용 자격증명을 코드, 문서, `.env` �
 - 앱 저장소의 첫 `main` push는 Coolify 개발 환경을 자동 생성·배포하고 이후
   `main` push는 같은 앱을 자동 재배포한다.
 - 자동 프로비저너가 앱 전용 PostgreSQL database·role, `DATABASE_URL`, `APP_ENV=dev`,
-  HTTPS 도메인을 준비한다. 공용 HTTP Basic Auth는 2026-08-27에 제거됐다 - 접근 제어가
-  필요하면 앱 안에서 구현한다.
+  `APP_BASE_URL`과 HTTPS 도메인을 준비한다. 신규 앱은 기본 공개이고 공용 HTTP Basic
+  Auth는 적용되지 않는다. 접근 제어가 필요하면 앱 안에서 구현한다.
 - `APP_ENV`는 운영에서도 항상 `dev`다. 이 값으로 환경을 분기하지 않는다(배포 규약 R5-1).
 - 그 외 시크릿(서명 키, 외부 API 키)은 사람이 Coolify 화면에 넣어야 하므로 첫 배포가
   한 번 실패하는 것이 정상이다(배포 규약 R5-6).
@@ -217,8 +246,9 @@ uv run python scripts/export_handoff.py --project-name 프로젝트명
   이력이나 remote를 재사용하지 않는다.
 - 업로드 전에 생성된 `SOURCE-HANDOFF.md`와 파일 목록을 확인한다.
 - `.env`, 비밀번호, 토큰, 실제 회사 데이터, 개인정보가 없는지 다시 검사한다.
-- `_bmad`, `.agents`, `_bmad-output`, `tests`, `data`, DB 파일, 캐시, 가상환경,
-  로그, 임시 파일, 로컬 업로드 파일 및 기존 `.git`은 절대 포함하지 않는다.
+- `_bmad`, `.agents`, `_bmad-output`, `data`, DB 파일, 캐시, 가상환경, 로그, 임시 파일,
+  로컬 업로드 파일 및 기존 `.git`은 절대 포함하지 않는다. 검토 재현에 필요한 `tests/`,
+  pytest·Ruff 설정과 `scripts/export_handoff.py`는 포함한다.
 - 사용자가 데이터나 BMAD 문서까지 명시적으로 요청해도 소스코드와 같은 묶음에 넣지
   않는다. 필요성과 민감정보를 확인한 뒤 별도 파일로 분리한다.
 - ZIP에는 Streamlit 실행에 필요한 `Dockerfile`, `compose.yaml`,
@@ -243,8 +273,9 @@ uv run python scripts/export_handoff.py --project-name 프로젝트명
 - `uv run streamlit run app.py` 실행 성공
 - `src/` 내부에 `import streamlit`이 없음
 - `.env`와 `data/*.db`가 Git 추적 대상이 아님
-- 해당 작업의 BMAD 산출물과 `_bmad-output/workflow-status.md`의 경로·승인 상태가 일치
-- BMAD 인수 조건과 테스트 결과가 서로 대응
+- BMAD가 설치된 원래 바이브코딩 작업공간에서는 해당 산출물과
+  `_bmad-output/workflow-status.md`의 경로·승인 상태가 일치
+- 같은 원래 작업공간에서는 BMAD 인수 조건과 테스트 결과가 서로 대응
 - `README.md`가 템플릿 설명이 아니라 현재 프로젝트를 설명함
 - Git remote가 원본 템플릿이 아닌 별도 앱 저장소를 가리킴
 - 배포 작업이면 사용자 승인 후 `main` push 성공을 확인함

@@ -21,6 +21,7 @@ INCLUDED_FILES = (
     "samwoo-service.yaml",
     "alembic.ini",
     "app.py",
+    "pyproject.toml",
     "start.cmd",
     "uv.lock",
 )
@@ -34,22 +35,36 @@ INCLUDED_DIRECTORIES = (
     "locales",
     ".streamlit",
     "migrations",
+    "tests",
+    "scripts",
 )
 REQUIRED_FILES = (
+    "README.md",
+    "AGENTS.md",
+    ".dockerignore",
+    ".env.example",
+    ".gitignore",
+    ".python-version",
     "Dockerfile",
     "compose.yaml",
     "samwoo-service.yaml",
     "alembic.ini",
+    "app.py",
+    "pyproject.toml",
+    "start.cmd",
+    ".streamlit/config.toml",
     "migrations/env.py",
+    "tests/test_deployment_contract.py",
+    "scripts/export_handoff.py",
     "uv.lock",
 )
 EXCLUDED_NAMES = {
     ".git",
+    ".ssh",
     ".agents",
     "_bmad",
     "_bmad-output",
     "_handoff",
-    "tests",
     "data",
     ".venv",
     "__pycache__",
@@ -61,15 +76,49 @@ EXCLUDED_SUFFIXES = (
     ".db",
     ".db-shm",
     ".db-wal",
+    ".db-journal",
+    ".sqlite",
+    ".sqlite-shm",
+    ".sqlite-wal",
+    ".sqlite-journal",
+    ".sqlite3",
+    ".sqlite3-shm",
+    ".sqlite3-wal",
+    ".sqlite3-journal",
     ".log",
     ".pyc",
     ".pyo",
     ".tmp",
 )
 SECRET_NAME_PATTERN = re.compile(
-    r"(^|[._-])(secret|token|password|passwd|credential|private[-_]?key)([._-]|$)",
+    r"(^|[._-])(secrets?|token|password|passwd|credentials?|private[-_]?key|"
+    r"api[-_]?key|access[-_]?key|client[-_]?secret)([._-]|$)",
     re.IGNORECASE,
 )
+SECRET_SUFFIXES = {".pem", ".key", ".p12", ".pfx", ".jks", ".keystore"}
+SECRET_FILENAMES = {
+    ".netrc",
+    ".npmrc",
+    ".pypirc",
+    "credentials",
+    "credentials.json",
+    "credentials.toml",
+    "credentials.yaml",
+    "credentials.yml",
+    "id_ed25519",
+    "id_ed25519_sk",
+    "id_ecdsa",
+    "id_ecdsa_sk",
+    "id_ed448",
+    "id_dsa",
+    "id_rsa",
+    "id_xmss",
+    "secrets",
+    "secrets.json",
+    "secrets.toml",
+    "secrets.yaml",
+    "secrets.yml",
+}
 
 
 def safe_project_name(raw_name: str) -> str:
@@ -79,42 +128,50 @@ def safe_project_name(raw_name: str) -> str:
     return name
 
 
+def is_sensitive(path: Path) -> bool:
+    name = path.name.lower()
+    return bool(
+        name.startswith(".env")
+        and name != ".env.example"
+        or name in SECRET_FILENAMES
+        or path.suffix.lower() in SECRET_SUFFIXES
+        or SECRET_NAME_PATTERN.search(path.name)
+    )
+
+
 def should_exclude(path: Path) -> bool:
     if any(part in EXCLUDED_NAMES for part in path.parts):
         return True
-    if path.name == ".env" or SECRET_NAME_PATTERN.search(path.name):
+    if is_sensitive(path):
         return True
-    return path.name.lower().endswith(EXCLUDED_SUFFIXES)
+    name = path.name.lower()
+    # A second extension must not disguise a copied SQLite database such as
+    # ``prod.db.bak`` or ``cache.sqlite.copy``.
+    if ".db" in name or ".sqlite" in name:
+        return True
+    return name.endswith(EXCLUDED_SUFFIXES)
 
 
 def copy_source(source: Path, destination: Path) -> None:
     if source.is_symlink():
         raise ValueError(f"심볼릭 링크는 인수인계본에 포함할 수 없습니다: {source}")
+    if is_sensitive(source):
+        raise ValueError(f"비밀 가능성이 있는 파일을 먼저 확인·제거하세요: {source}")
     if source.is_dir():
         for child in sorted(source.iterdir()):
             relative = child.relative_to(source)
+            if is_sensitive(child):
+                raise ValueError(f"비밀 가능성이 있는 파일을 먼저 확인·제거하세요: {child}")
             if should_exclude(relative):
                 continue
             copy_source(child, destination / relative)
         return
+    if not source.is_file():
+        raise ValueError(f"일반 파일이 아닌 항목은 인수인계본에 포함할 수 없습니다: {source}")
     if should_exclude(source):
         return
     destination.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(source, destination)
-
-
-def runtime_pyproject(content: str) -> str:
-    """Remove development-only TOML sections while preserving runtime metadata."""
-    excluded_sections = ("[dependency-groups]", "[tool.pytest.", "[tool.ruff")
-    output: list[str] = []
-    skipping = False
-    for line in content.splitlines():
-        stripped = line.strip()
-        if stripped.startswith("[") and stripped.endswith("]"):
-            skipping = any(stripped.startswith(section) for section in excluded_sections)
-        if not skipping:
-            output.append(line)
-    return "\n".join(output).rstrip() + "\n"
 
 
 def write_handoff_files(project_root: Path, export_root: Path, project_name: str) -> None:
@@ -132,18 +189,6 @@ def write_handoff_files(project_root: Path, export_root: Path, project_name: str
     for source in sorted(project_root.glob("*.py")):
         copy_source(source, export_root / source.name)
 
-    pyproject = project_root / "pyproject.toml"
-    if not pyproject.is_file():
-        raise FileNotFoundError("pyproject.toml을 찾을 수 없습니다.")
-    (export_root / "pyproject.toml").write_text(
-        runtime_pyproject(pyproject.read_text(encoding="utf-8")),
-        encoding="utf-8",
-    )
-
-    (export_root / ".gitignore").write_text(
-        ".venv/\n__pycache__/\n*.py[cod]\n.env\ndata/\n*.db\n*.db-*\n",
-        encoding="utf-8",
-    )
     (export_root / "SOURCE-HANDOFF.md").write_text(
         f"""# {project_name} 소스코드 인수인계
 
@@ -159,11 +204,13 @@ def write_handoff_files(project_root: Path, export_root: Path, project_name: str
 - 런타임 의존성: `pyproject.toml`, `uv.lock`
 - Coolify 배포 파일: `Dockerfile`, `compose.yaml`, `samwoo-service.yaml`
 - PostgreSQL migration: `alembic.ini`, `migrations/`
+- pytest 회귀 테스트와 린트 설정
+- 검증된 인수인계본을 다시 만드는 `scripts/export_handoff.py`
 - 비밀값이 없는 환경변수 예시: `.env.example`
 
 ## 의도적으로 제외한 항목
 
-- BMAD 산출물과 테스트·린트 전용 파일
+- BMAD 도구·산출물
 - SQLite DB, 사용자 입력 데이터와 로컬 업로드 파일
 - `.env`, 토큰, 비밀번호, 개인정보
 - 캐시, 가상환경, 로그, 임시 파일
@@ -186,6 +233,10 @@ def validate_export(export_root: Path) -> list[Path]:
         raise ValueError("내보내기 결과에 app.py가 없습니다.")
     if not any((export_root / "src").rglob("*.py")):
         raise ValueError("내보내기 결과에 src Python 코드가 없습니다.")
+    if not any((export_root / "migrations/versions").glob("*.py")):
+        raise ValueError("내보내기 결과에 Alembic migration revision이 없습니다.")
+    if not any((export_root / "tests").glob("test_*.py")):
+        raise ValueError("내보내기 결과에 pytest 회귀 테스트가 없습니다.")
     for path in files:
         relative = path.relative_to(export_root)
         if should_exclude(relative):
@@ -200,6 +251,13 @@ def create_zip(export_root: Path, archive: Path) -> None:
         for path in sorted(export_root.rglob("*")):
             if path.is_file():
                 bundle.write(path, path.relative_to(export_root))
+
+
+def validate_output_dir(project_root: Path, output_dir: Path) -> None:
+    """Prevent an export directory from recursively becoming its own input."""
+    handoff_root = (project_root / "_handoff").resolve()
+    if output_dir.is_relative_to(project_root) and not output_dir.is_relative_to(handoff_root):
+        raise ValueError("프로젝트 내부 출력은 _handoff 아래에만 만들 수 있습니다.")
 
 
 def parse_args() -> argparse.Namespace:
@@ -218,6 +276,7 @@ def main() -> int:
     project_root = Path(__file__).resolve().parents[1]
     project_name = safe_project_name(args.project_name or project_root.name)
     output_dir = (args.output_dir or project_root / "_handoff").resolve()
+    validate_output_dir(project_root, output_dir)
     export_root = output_dir / f"{project_name}-source"
     archive = output_dir / f"{project_name}-source.zip"
 
