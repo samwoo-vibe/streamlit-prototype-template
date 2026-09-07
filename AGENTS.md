@@ -282,3 +282,5 @@ uv run python scripts/export_handoff.py --project-name 프로젝트명
 - `uv run python scripts/export_handoff.py --project-name 프로젝트명` 성공
 - 인계 ZIP을 새 저장소 루트에 풀었을 때 `compose.yaml`과
   `samwoo-service.yaml`이 최상위에 존재함
+- Streamlit HTML은 `no-cache`, 해시된 정적 자산만 1년 `immutable`이라는 기본
+  응답 계약을 유지하며 런타임 또는 프록시 변경 시 실제 헤더를 재검증함

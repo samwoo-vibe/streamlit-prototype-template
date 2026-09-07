@@ -64,6 +64,19 @@ def test_public_streamlit_hides_exception_details() -> None:
     assert "showErrorDetails=full" not in dockerfile
 
 
+def test_streamlit_version_keeps_builtin_cache_contract() -> None:
+    """Streamlit 1.x serves HTML with no-cache and hashed assets immutable.
+
+    Keep the supported major version bounded so a future runtime upgrade must
+    explicitly re-verify those response headers before deployment.
+    """
+    pyproject = read("pyproject.toml")
+    lock = read("uv.lock")
+
+    assert '"streamlit>=1.46,<2"' in pyproject
+    assert re.search(r'\[\[package\]\]\nname = "streamlit"\nversion = "1\.60\.0"', lock)
+
+
 def test_application_does_not_create_schema_outside_alembic() -> None:
     application_paths = [ROOT / "app.py"]
     application_paths.extend((ROOT / "src").rglob("*.py"))

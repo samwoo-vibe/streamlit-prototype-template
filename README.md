@@ -83,6 +83,13 @@ SQLite 프로토타입에서만 열리고, PostgreSQL을 사용하는 공개 배
 50MB보다 큰 파일을 처리해야 하면 `.streamlit/config.toml`만 임의로 높이지 말고 실제 최대
 동시 작업의 메모리를 측정해 `mem_limit`과 업로드 한도를 함께 조정해야 합니다.
 
+## 브라우저 캐시 정책
+
+이 템플릿이 고정한 Streamlit 1.60.0은 HTML 진입 문서를 `no-cache`로 제공하고,
+파일명에 해시가 붙은 JS/CSS만 `public, immutable, max-age=31536000`으로 제공합니다.
+Streamlit 버전 또는 앞단 프록시를 변경할 때는 두 응답 헤더를 실제 배포 주소에서 다시
+검증해야 합니다. HTML에 장기 캐시를 덮어쓰지 마세요.
+
 ## 저장 데이터
 
 개발 데이터는 `data/prototype.db`에 저장됩니다. 이 파일은 Git에 올라가지
